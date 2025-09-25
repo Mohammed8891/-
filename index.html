@@ -117,7 +117,6 @@
   <div id="table-container" class="table-container"></div>
 
   <script>
-    // بيانات Supabase
     const supabaseUrl = 'https://uemmbigftrrsejzucgxo.supabase.co';
     const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVlbW1iaWdmdHJyc2VqenVjZ3hvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTg3OTE5NTksImV4cCI6MjA3NDM2Nzk1OX0.ku6ibVn84Pw1a-_2sWTRia3fynuxE7Axi3qXip6oI8k';
     const supabase = supabase.createClient(supabaseUrl, supabaseKey);
@@ -177,7 +176,7 @@
       table.appendChild(tbody);
       tableContainer.appendChild(table);
 
-      // أزرار حفظ وحذف
+      // أزرار الحفظ والحذف
       const actionDiv = document.createElement('div');
       actionDiv.className = 'action-buttons';
 
@@ -195,7 +194,7 @@
 
       tableContainer.appendChild(actionDiv);
 
-      // تحميل البيانات المحفوظة
+      // تحميل البيانات
       loadSavedData(type, table);
     }
 
@@ -209,13 +208,13 @@
         });
       });
 
-      // حذف البيانات القديمة لهذا النوع
+      // حذف البيانات القديمة
       await supabase
         .from('schedules')
         .delete()
         .eq('type', type);
 
-      // إدخال البيانات الجديدة
+      // حفظ الجديدة
       const { error } = await supabase
         .from('schedules')
         .insert([{ type, data }]);
@@ -260,4 +259,7 @@
     }
 
     async function deleteTableData(type) {
-      const confirmed
+      const confirmed = confirm('هل أنت متأكد أنك تريد حذف بيانات هذا الجدول؟');
+      if (!confirmed) return;
+
+      const
