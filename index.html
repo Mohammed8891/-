@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>جدول النشر</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
   <style>
     body {
       font-family: 'Arial', sans-serif;
@@ -116,6 +117,11 @@
   <div id="table-container" class="table-container"></div>
 
   <script>
+    // تهيئة Supabase
+    const supabaseUrl = 'https://uemmbigftrrsejzucgxo.supabase.co'; // ضع رابط مشروعك هنا
+    const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVlbW1iaWdmdHJyc2VqenVjZ3hvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTg3OTE5NTksImV4cCI6MjA3NDM2Nzk1OX0.ku6ibVn84Pw1a-_2sWTRia3fynuxE7Axi3qXip6oI8k'; // ضع المفتاح العام هنا
+    const supabase = supabase.createClient(supabaseUrl, supabaseKey);
+
     function showTable(type) {
       const tableContainer = document.getElementById('table-container');
       tableContainer.style.display = 'block';
@@ -190,11 +196,11 @@
 
       tableContainer.appendChild(actionDiv);
 
-      // تحميل البيانات من التخزين المحلي إن وجدت
+      // تحميل البيانات من Supabase
       loadSavedData(type, table);
     }
 
-    function saveTableData(type, table) {
+    async function saveTableData(type, table) {
       const rows = Array.from(table.querySelectorAll('tbody tr'));
       const data = rows.map(row => {
         return Array.from(row.cells).map(cell => {
@@ -207,40 +213,70 @@
         });
       });
 
-      localStorage.setItem(`tableData-${type}`, JSON.stringify(data));
-      alert('✅ تم حفظ الجدول بنجاح!');
+      // حذف البيانات القديمة أولاً (اختياري حسب الحاجة)
+      await supabase
+        .from('schedules')
+        .delete()
+        .eq('type', type);
+
+      const { error } = await supabase
+        .from('schedules')
+        .insert([{ type, data }]);
+
+      if (error) {
+        alert('❌ فشل في حفظ البيانات.');
+        console.error(error);
+      } else {
+        alert('✅ تم حفظ الجدول في Supabase!');
+      }
     }
 
-    function loadSavedData(type, table) {
-      const saved = localStorage.getItem(`tableData-${type}`);
-      if (!saved) return;
+    async function loadSavedData(type, table) {
+      const { data, error } = await supabase
+        .from('schedules')
+        .select('data')
+        .eq('type', type)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .single();
 
-      const data = JSON.parse(saved);
+      if (error || !data) return;
+
+      const saved = data.data;
       const rows = table.querySelectorAll('tbody tr');
 
       rows.forEach((row, i) => {
         const cells = row.querySelectorAll('td');
-        if (!data[i]) return;
+        if (!saved[i]) return;
 
         cells.forEach((cell, j) => {
           const input = cell.querySelector('input');
           if (!input) return;
 
           if (input.type === 'checkbox') {
-            input.checked = data[i][j] || false;
+            input.checked = saved[i][j] || false;
           } else {
-            input.value = data[i][j] || '';
+            input.value = saved[i][j] || '';
           }
         });
       });
     }
 
-    function deleteTableData(type) {
+    async function deleteTableData(type) {
       const confirmed = confirm('هل أنت متأكد أنك تريد حذف بيانات هذا الجدول؟');
-      if (confirmed) {
-        localStorage.removeItem(`tableData-${type}`);
+      if (!confirmed) return;
+
+      const { error } = await supabase
+        .from('schedules')
+        .delete()
+        .eq('type', type);
+
+      if (error) {
+        alert('❌ حدث خطأ أثناء حذف البيانات.');
+        console.error(error);
+      } else {
         alert('🗑️ تم حذف بيانات الجدول.');
-        location.reload(); // إعادة تحميل الصفحة لمسح البيانات من الجدول أيضًا
+        location.reload();
       }
     }
   </script>
