@@ -118,6 +118,9 @@
 
   <script>
 
+    const supabase = supabase.createClient('https://YOUR-PROJECT-ID.supabase.co', 'YOUR-ANON-KEY');
+
+
     function showTable(type) {
       const tableContainer = document.getElementById('table-container');
       tableContainer.style.display = 'block';
@@ -253,8 +256,23 @@
       });
     }
 
-    async function deleteTableData(type) {
-      const confirmed = confirm('هل أنت متأكد أنك تريد حذف بيانات هذا الجدول؟');
-      if (!confirmed) return;
+async function deleteTableData(type) {
+  const confirmed = confirm('هل أنت متأكد أنك تريد حذف بيانات هذا الجدول؟');
+  if (!confirmed) return;
+
+  const { error } = await supabase
+    .from('schedules')
+    .delete()
+    .eq('type', type);
+
+  if (error) {
+    alert('❌ فشل في حذف البيانات.');
+    console.error(error);
+  } else {
+    alert('🗑️ تم حذف بيانات الجدول بنجاح!');
+    document.getElementById('table-container').style.display = 'none';
+  }
+}
+
 
       const
