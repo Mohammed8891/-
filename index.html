@@ -176,7 +176,7 @@
       table.appendChild(tbody);
       tableContainer.appendChild(table);
 
-      // أزرار الحفظ والحذف
+      // أزرار حفظ وحذف
       const actionDiv = document.createElement('div');
       actionDiv.className = 'action-buttons';
 
@@ -194,7 +194,7 @@
 
       tableContainer.appendChild(actionDiv);
 
-      // تحميل البيانات
+      // تحميل البيانات المحفوظة
       loadSavedData(type, table);
     }
 
@@ -208,13 +208,11 @@
         });
       });
 
-      // حذف البيانات القديمة
       await supabase
         .from('schedules')
         .delete()
         .eq('type', type);
 
-      // حفظ الجديدة
       const { error } = await supabase
         .from('schedules')
         .insert([{ type, data }]);
