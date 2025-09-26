@@ -147,89 +147,103 @@
 
 <script>
   // ✅ بيانات Supabase
-  const supabaseUrl = 'https://uemmbigftrrsejzucgxo.supabase.co';
-  const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVlbW1iaWdmdHJyc2VqenVjZ3hvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTg3OTE5NTksImV4cCI6MjA3NDM2Nzk1OX0.ku6ibVn84Pw1a-_2sWTRia3fynuxE7Axi3qXip6oI8k';
-  const supabase = supabase.createClient(supabaseUrl, supabaseKey);
+const supabaseUrl = 'https://uemmbigftrrsejzucgxo.supabase.co';
+const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVlbW1iaWdmdHJyc2VqenVjZ3hvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTg3OTE5NTksImV4cCI6MjA3NDM2Nzk1OX0.ku6ibVn84Pw1a-_2sWTRia3fynuxE7Axi3qXip6oI8k';
+const supabase = supabase.createClient(supabaseUrl, supabaseKey);
 
-  async function showTable(type) {
-    const tableContainer = document.getElementById('table-container');
-    tableContainer.style.display = 'block';
-    tableContainer.innerHTML = '';
+async function showTable(type) {
+  const tableContainer = document.getElementById('table-container');
+  tableContainer.style.display = 'block';
+  tableContainer.innerHTML = '';
 
-    let headers = ['اليوم', 'التاريخ', 'عنوان المقطع', 'Instagram'];
+  let headers = ['اليوم', 'التاريخ', 'عنوان المقطع', 'Instagram'];
 
-    if (type === 'mrb') {
-      headers = ['اليوم', 'التاريخ', 'عنوان المقطع', 'Facebook', 'Telegram', 'Instagram', 'X', 'WhatsApp'];
-    } else if (type === 'reels') {
-      headers = ['اليوم', 'التاريخ', 'عنوان المقطع', 'Instagram', 'TikTok'];
-    }
-
-    const table = document.createElement('table');
-    const thead = document.createElement('thead');
-    const headRow = document.createElement('tr');
-
-    headers.forEach(header => {
-      const th = document.createElement('th');
-      th.textContent = header;
-      headRow.appendChild(th);
-    });
-
-    thead.appendChild(headRow);
-    table.appendChild(thead);
-
-    const tbody = document.createElement('tbody');
-    for (let i = 0; i < 8; i++) {
-      const row = document.createElement('tr');
-
-      headers.forEach((header) => {
-        const cell = document.createElement('td');
-        let input;
-
-        if (header === 'اليوم' || header === 'عنوان المقطع') {
-          input = document.createElement('input');
-          input.type = 'text';
-        } else if (header === 'التاريخ') {
-          input = document.createElement('input');
-          input.type = 'date';
-        } else {
-          input = document.createElement('input');
-          input.type = 'checkbox';
-        }
-
-        cell.appendChild(input);
-        row.appendChild(cell);
-      });
-
-      tbody.appendChild(row);
-    }
-
-    table.appendChild(tbody);
-    tableContainer.appendChild(table);
-
-    // أزرار
-    const actionDiv = document.createElement('div');
-    actionDiv.className = 'action-buttons';
-
-    const saveBtn = document.createElement('button');
-    saveBtn.textContent = 'حفظ الجدول';
-    saveBtn.className = 'blue-btn';
-    saveBtn.onclick = () => saveTableData(type, table);
-
-    const deleteBtn = document.createElement('button');
-    deleteBtn.textContent = 'حذف الجدول';
-    deleteBtn.classList.add('delete-button');
-    deleteBtn.onclick = () => deleteTableData(type, table);
-
-    actionDiv.appendChild(saveBtn);
-    actionDiv.appendChild(deleteBtn);
-
-    tableContainer.appendChild(actionDiv);
-
-    // تحميل البيانات من Supabase
-    loadSavedData(type, table);
+  if (type === 'mrb') {
+    headers = ['اليوم', 'التاريخ', 'عنوان المقطع', 'Facebook', 'Telegram', 'Instagram', 'X', 'WhatsApp'];
+  } else if (type === 'reels') {
+    headers = ['اليوم', 'التاريخ', 'عنوان المقطع', 'Instagram', 'TikTok'];
   }
 
-  async function saveTableData(type, table) {
+  const table = document.createElement('table');
+  const thead = document.createElement('thead');
+  const headRow = document.createElement('tr');
+
+  headers.forEach(header => {
+    const th = document.createElement('th');
+    th.textContent = header;
+    headRow.appendChild(th);
+  });
+
+  thead.appendChild(headRow);
+  table.appendChild(thead);
+
+  const tbody = document.createElement('tbody');
+  for (let i = 0; i < 8; i++) {
+    const row = document.createElement('tr');
+
+    headers.forEach((header) => {
+      const cell = document.createElement('td');
+      let input;
+
+      if (header === 'اليوم' || header === 'عنوان المقطع') {
+        input = document.createElement('input');
+        input.type = 'text';
+      } else if (header === 'التاريخ') {
+        input = document.createElement('input');
+        input.type = 'date';
+      } else {
+        input = document.createElement('input');
+        input.type = 'checkbox';
+      }
+
+      cell.appendChild(input);
+      row.appendChild(cell);
+    });
+
+    tbody.appendChild(row);
+  }
+
+  table.appendChild(tbody);
+  tableContainer.appendChild(table);
+
+  // أزرار
+  const actionDiv = document.createElement('div');
+  actionDiv.className = 'action-buttons';
+
+  const saveBtn = document.createElement('button');
+  saveBtn.textContent = 'حفظ الجدول';
+  saveBtn.className = 'blue-btn';
+  saveBtn.onclick = () => saveTableData(type, table);
+
+  const deleteBtn = document.createElement('button');
+  deleteBtn.textContent = 'حذف الجدول';
+  deleteBtn.classList.add('delete-button');
+  deleteBtn.onclick = () => deleteTableData(type, table);
+
+  actionDiv.appendChild(saveBtn);
+  actionDiv.appendChild(deleteBtn);
+
+  tableContainer.appendChild(actionDiv);
+
+  // تحميل البيانات من Supabase
+  loadSavedData(type, table);
+}
+
+async function saveTableData(type, table) {
+  try {
+    // الخطوة 1: حذف البيانات القديمة لتجنب التكرار
+    const { error: deleteError } = await supabase
+      .from('publishing_schedule')
+      .delete()
+      .eq('type', type);
+
+    if (deleteError) {
+      console.error('خطأ في الحذف:', deleteError);
+      alert('حدث خطأ أثناء حذف البيانات القديمة.');
+      return;
+    }
+
+    // الخطوة 2: جمع البيانات الجديدة
     const rows = Array.from(table.querySelectorAll('tbody tr'));
     const data = [];
 
@@ -242,31 +256,40 @@
           type,
           row_index: rowIndex,
           column_index: colIndex,
-          value: input.type === 'checkbox' ? null : input.value,
+          value: input.type === 'checkbox' ? null : input.value || '',  // تحسين: استخدم '' بدلاً من null للقيم الفارغة
           checked: input.type === 'checkbox' ? input.checked : null
         });
       });
     });
 
-    // حذف البيانات القديمة
-    // إدخال البيانات الجديدة
-    const { error } = await supabase.from('publishing_schedule').insert(data);
-    if (error) {
-      console.error(error);
-      alert('حدث خطأ أثناء الحفظ.');
+    // الخطوة 3: إدراج البيانات الجديدة
+    const { error: insertError } = await supabase.from('publishing_schedule').insert(data);
+
+    if (insertError) {
+      console.error('خطأ في الإدراج:', insertError);
+      alert('حدث خطأ أثناء الحفظ: ' + insertError.message);
     } else {
       alert('تم حفظ الجدول بنجاح!');
+      // إعادة تحميل البيانات للتأكيد (اختياري)
+      loadSavedData(type, table);
     }
+  } catch (err) {
+    console.error('خطأ عام:', err);
+    alert('حدث خطأ غير متوقع أثناء الحفظ.');
   }
+}
 
-  async function loadSavedData(type, table) {
+async function loadSavedData(type, table) {
+  try {
     const { data, error } = await supabase
       .from('publishing_schedule')
       .select('*')
-      .eq('type', type);
+      .eq('type', type)
+      .order('row_index')  // تحسين: ترتيب حسب row_index لضمان التحميل الصحيح
+      .order('column_index');
 
     if (error) {
-      console.error(error);
+      console.error('خطأ في التحميل:', error);
       return;
     }
 
@@ -280,28 +303,33 @@
       if (!input) return;
 
       if (input.type === 'checkbox') {
-        input.checked = entry.checked;
+        input.checked = entry.checked || false;  // تحسين: قيمة افتراضية false
       } else {
-        input.value = entry.value;
+        input.value = entry.value || '';  // تحسين: قيمة افتراضية فارغة
       }
     });
+  } catch (err) {
+    console.error('خطأ في loadSavedData:', err);
   }
+}
 
-  async function deleteTableData(type, table) {
-    const confirmed = confirm('هل أنت متأكد أنك تريد حذف بيانات هذا الجدول؟');
-    if (!confirmed) return;
+async function deleteTableData(type, table) {
+  const confirmed = confirm('هل أنت متأكد أنك تريد حذف بيانات هذا الجدول؟');
+  if (!confirmed) return;
 
+  try {
     const { error } = await supabase
       .from('publishing_schedule')
       .delete()
       .eq('type', type);
 
     if (error) {
-      console.error(error);
-      alert('حدث خطأ أثناء الحذف.');
+      console.error('خطأ في الحذف:', error);
+      alert('حدث خطأ أثناء الحذف: ' + error.message);
       return;
     }
 
+    // مسح الإدخالات في الجدول المحلي
     const inputs = table.querySelectorAll('input');
     inputs.forEach(input => {
       if (input.type === 'checkbox') {
@@ -312,7 +340,12 @@
     });
 
     alert('تم حذف البيانات بنجاح!');
+  } catch (err) {
+    console.error('خطأ عام في الحذف:', err);
+    alert('حدث خطأ غير متوقع أثناء الحذف.');
   }
+}
+
 </script>
 </body>
 </html>
