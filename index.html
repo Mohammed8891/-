@@ -346,6 +346,33 @@ async function deleteTableData(type, table) {
   }
 }
 
+  // اختبار الاتصال (أضفه مؤقتًا)
+async function testSupabase() {
+  try {
+    console.log('اختبار الاتصال بـ Supabase...');
+    
+    // اختبار SELECT بسيط
+    const { data: testData, error: testError } = await supabase
+      .from('publishing_schedule')
+      .select('count')
+      .single();  // يجلب عدد السجلات
+
+    if (testError) {
+      console.error('خطأ في الاتصال:', testError);
+      alert('مشكلة في Supabase: ' + testError.message);
+    } else {
+      console.log('الاتصال ناجح! عدد السجلات الحالي:', testData?.count || 0);
+      alert('الاتصال بـ Supabase يعمل! عدد السجلات: ' + (testData?.count || 0));
+    }
+  } catch (err) {
+    console.error('خطأ عام في الاختبار:', err);
+    alert('خطأ في الاختبار: ' + err.message);
+  }
+}
+
+// شغّل الاختبار عند تحميل الصفحة
+document.addEventListener('DOMContentLoaded', testSupabase);
+
 </script>
 </body>
 </html>
