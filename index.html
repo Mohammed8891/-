@@ -197,58 +197,7 @@
     }
   }
 
-  // اختبار الاتصال (يُشغّل بعد الإنشاء)
-  async function testSupabaseConnection(client) {
-    console.log('🔍 بدء اختبار الاتصال...');
-    try {
-      // اختبار 1: الاتصال الأساسي
-      const { data: pingData, error: pingError } = await client
-        .from('pg_catalog')
-        .select('version()')
-        .limit(1);
-      if (pingError) throw new Error('فشل الاتصال: ' + pingError.message);
-
-      console.log('✅ الاتصال الأساسي ناجح!');
-
-      // اختبار 2: الجدول
-      const { count: tableCount, error: tableError } = await client
-        .from('publishing_schedule')
-        .select('*', { count: 'exact', head: true });
-
-      if (tableError && tableError.code === '42P01') {
-        console.error('❌ الجدول غير موجود!');
-        alert('❌ الجدول غير موجود! اذهب إلى Supabase > SQL Editor وأنشئه:\n\nCREATE TABLE IF NOT EXISTS publishing_schedule (\n  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,\n  type TEXT NOT NULL,\n  row_index INTEGER NOT NULL,\n  column_index INTEGER NOT NULL,\n  value TEXT,\n  checked BOOLEAN\n);');
-        return;
-      } else if (tableError) {
-        throw new Error('خطأ في الجدول: ' + tableError.message);
-      }
-
-      console.log('✅ الجدول موجود! عدد السجلات: ' + (tableCount || 0));
-
-      // اختبار 3: إدراج
-      const { error: insertError } = await client
-        .from('publishing_schedule')
-        .insert([{ type: 'test', row_index: 0, column_index: 0, value: 'test' }]);
-
-      if (insertError) {
-        console.error('❌ خطأ في الإدراج:', insertError);
-        if (insertError.message.includes('permission')) {
-          alert('❌ مشكلة صلاحيات! في Supabase > Table Editor > publishing_schedule > Configuration، عطّل RLS (Enable RLS: off) أو أضف Policies.');
-        } else {
-          alert('❌ خطأ في الحفظ: ' + insertError.message);
-        }
-        return;
-      }
-
-      // حذف التجريبي
-      await client.from('publishing_schedule').delete().eq('type', 'test');
-      console.log('✅ الاختبار ناجح! كل شيء جاهز.');
-      alert('✅ Supabase يعمل بشكل كامل! الآن جرب حفظ الجدول.');
-    } catch (err) {
-      console.error('❌ فشل الاختبار:', err);
-      alert('❌ فشل الاختبار: ' + err.message + '\n\nتحقق من Console وSupabase Dashboard.');
-    }
-  }
+  
 
   // الدوال الرئيسية
   function showTable(type) {
