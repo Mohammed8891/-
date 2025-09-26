@@ -249,8 +249,6 @@
     });
 
     // حذف البيانات القديمة
-    await supabase.from('publishing_schedule').delete().eq('type', type);
-
     // إدخال البيانات الجديدة
     const { error } = await supabase.from('publishing_schedule').insert(data);
     if (error) {
