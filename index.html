@@ -115,125 +115,140 @@
 
   <div id="table-container" class="table-container"></div>
 
-  <script>
+<script>
+  function showTable(type) {
+    const tableContainer = document.getElementById('table-container');
+    tableContainer.style.display = 'block';
+    tableContainer.innerHTML = '';
 
+    let headers = ['اليوم', 'التاريخ', 'عنوان المقطع', 'Instagram'];
 
-    function showTable(type) {
-      const tableContainer = document.getElementById('table-container');
-      tableContainer.style.display = 'block';
-      tableContainer.innerHTML = '';
-
-      let headers = ['اليوم', 'التاريخ', 'عنوان المقطع', 'Instagram'];
-
-      if (type === 'mrb') {
-        headers = ['اليوم', 'التاريخ', 'عنوان المقطع', 'Facebook', 'Telegram', 'Instagram', 'X', 'WhatsApp'];
-      } else if (type === 'reels') {
-        headers = ['اليوم', 'التاريخ', 'عنوان المقطع', 'Instagram', 'TikTok'];
-      }
-
-      const table = document.createElement('table');
-      const thead = document.createElement('thead');
-      const headRow = document.createElement('tr');
-
-      headers.forEach(header => {
-        const th = document.createElement('th');
-        th.textContent = header;
-        headRow.appendChild(th);
-      });
-
-      thead.appendChild(headRow);
-      table.appendChild(thead);
-
-      const tbody = document.createElement('tbody');
-      for (let i = 0; i < 8; i++) {
-        const row = document.createElement('tr');
-
-        headers.forEach((header) => {
-          const cell = document.createElement('td');
-          let input;
-
-          if (header === 'اليوم' || header === 'عنوان المقطع') {
-            input = document.createElement('input');
-            input.type = 'text';
-          } else if (header === 'التاريخ') {
-            input = document.createElement('input');
-            input.type = 'date';
-          } else {
-            input = document.createElement('input');
-            input.type = 'checkbox';
-          }
-
-          cell.appendChild(input);
-          row.appendChild(cell);
-        });
-
-        tbody.appendChild(row);
-      }
-
-      table.appendChild(tbody);
-      tableContainer.appendChild(table);
-
-      // أزرار حفظ وحذف
-      const actionDiv = document.createElement('div');
-      actionDiv.className = 'action-buttons';
-
-      const saveBtn = document.createElement('button');
-      saveBtn.textContent = 'حفظ الجدول';
-      saveBtn.onclick = () => saveTableData(type, table);
-
-      const deleteBtn = document.createElement('button');
-      deleteBtn.textContent = 'حذف الجدول';
-      deleteBtn.classList.add('delete-button');
-      deleteBtn.onclick = () => deleteTableData(type);
-
-      actionDiv.appendChild(saveBtn);
-      actionDiv.appendChild(deleteBtn);
-
-      tableContainer.appendChild(actionDiv);
-
-      // تحميل البيانات المحفوظة
-      loadSavedData(type, table);
+    if (type === 'mrb') {
+      headers = ['اليوم', 'التاريخ', 'عنوان المقطع', 'Facebook', 'Telegram', 'Instagram', 'X', 'WhatsApp'];
+    } else if (type === 'reels') {
+      headers = ['اليوم', 'التاريخ', 'عنوان المقطع', 'Instagram', 'TikTok'];
     }
 
-    async function saveTableData(type, table) {
-      const rows = Array.from(table.querySelectorAll('tbody tr'));
-      const data = rows.map(row => {
-        return Array.from(row.cells).map(cell => {
-          const input = cell.querySelector('input');
-          if (!input) return '';
-          return input.type === 'checkbox' ? input.checked : input.value;
-        });
+    const table = document.createElement('table');
+    const thead = document.createElement('thead');
+    const headRow = document.createElement('tr');
+
+    headers.forEach(header => {
+      const th = document.createElement('th');
+      th.textContent = header;
+      headRow.appendChild(th);
+    });
+
+    thead.appendChild(headRow);
+    table.appendChild(thead);
+
+    const tbody = document.createElement('tbody');
+    for (let i = 0; i < 8; i++) {
+      const row = document.createElement('tr');
+
+      headers.forEach((header) => {
+        const cell = document.createElement('td');
+        let input;
+
+        if (header === 'اليوم' || header === 'عنوان المقطع') {
+          input = document.createElement('input');
+          input.type = 'text';
+        } else if (header === 'التاريخ') {
+          input = document.createElement('input');
+          input.type = 'date';
+        } else {
+          input = document.createElement('input');
+          input.type = 'checkbox';
+        }
+
+        cell.appendChild(input);
+        row.appendChild(cell);
       });
 
-      
-
-      if (error || !data) return;
-
-      const saved = data.data;
-      const rows = table.querySelectorAll('tbody tr');
-
-      rows.forEach((row, i) => {
-        const cells = row.querySelectorAll('td');
-        if (!saved[i]) return;
-
-        cells.forEach((cell, j) => {
-          const input = cell.querySelector('input');
-          if (!input) return;
-
-          if (input.type === 'checkbox') {
-            input.checked = saved[i][j] || false;
-          } else {
-            input.value = saved[i][j] || '';
-          }
-        });
-      });
+      tbody.appendChild(row);
     }
 
-async function deleteTableData(type) {
-  const confirmed = confirm('هل أنت متأكد أنك تريد حذف بيانات هذا الجدول؟');
-  if (!confirmed) return;
+    table.appendChild(tbody);
+    tableContainer.appendChild(table);
 
+    // أزرار حفظ وحذف
+    const actionDiv = document.createElement('div');
+    actionDiv.className = 'action-buttons';
 
+    const saveBtn = document.createElement('button');
+    saveBtn.textContent = 'حفظ الجدول';
+    saveBtn.onclick = () => saveTableData(type, table);
 
+    const deleteBtn = document.createElement('button');
+    deleteBtn.textContent = 'حذف الجدول';
+    deleteBtn.classList.add('delete-button');
+    deleteBtn.onclick = () => deleteTableData(type, table);
 
-      const
+    actionDiv.appendChild(saveBtn);
+    actionDiv.appendChild(deleteBtn);
+
+    tableContainer.appendChild(actionDiv);
+
+    // تحميل البيانات المحفوظة
+    loadSavedData(type, table);
+  }
+
+  function saveTableData(type, table) {
+    const rows = Array.from(table.querySelectorAll('tbody tr'));
+    const data = rows.map(row => {
+      return Array.from(row.cells).map(cell => {
+        const input = cell.querySelector('input');
+        if (!input) return '';
+        return input.type === 'checkbox' ? input.checked : input.value;
+      });
+    });
+
+    localStorage.setItem(`tableData_${type}`, JSON.stringify(data));
+    alert('تم حفظ الجدول بنجاح!');
+  }
+
+  function loadSavedData(type, table) {
+    const savedData = localStorage.getItem(`tableData_${type}`);
+    if (!savedData) return;
+
+    const data = JSON.parse(savedData);
+    const rows = table.querySelectorAll('tbody tr');
+
+    rows.forEach((row, i) => {
+      const cells = row.querySelectorAll('td');
+      if (!data[i]) return;
+
+      cells.forEach((cell, j) => {
+        const input = cell.querySelector('input');
+        if (!input) return;
+
+        if (input.type === 'checkbox') {
+          input.checked = data[i][j] || false;
+        } else {
+          input.value = data[i][j] || '';
+        }
+      });
+    });
+  }
+
+  function deleteTableData(type, table) {
+    const confirmed = confirm('هل أنت متأكد أنك تريد حذف بيانات هذا الجدول؟');
+    if (!confirmed) return;
+
+    localStorage.removeItem(`tableData_${type}`);
+
+    // إعادة تعيين القيم في الجدول
+    const inputs = table.querySelectorAll('input');
+    inputs.forEach(input => {
+      if (input.type === 'checkbox') {
+        input.checked = false;
+      } else {
+        input.value = '';
+      }
+    });
+
+    alert('تم حذف البيانات بنجاح!');
+  }
+</script>
+</body>
+</html>
