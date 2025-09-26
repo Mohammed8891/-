@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>جدول النشر</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
   <style>
     body {
       font-family: 'Arial', sans-serif;
@@ -18,48 +19,47 @@
       color: #333;
     }
 
-.blue-btn {
-  background-color: #007BFF;
-  color: white;
-  border: none;
-  padding: 16px 32px; /* زيادة الحجم */
-  margin: 8px;
-  cursor: pointer;
-  border-radius: 6px;
-  font-size: 20px; /* زيادة حجم الخط */
-}
+    .blue-btn {
+      background-color: #007BFF;
+      color: white;
+      border: none;
+      padding: 16px 32px;
+      margin: 8px;
+      cursor: pointer;
+      border-radius: 6px;
+      font-size: 20px;
+    }
 
+    .green-btn {
+      background-color: #28a745;
+      color: white;
+      border: none;
+      padding: 16px 32px;
+      margin: 8px;
+      cursor: pointer;
+      border-radius: 6px;
+      font-size: 20px;
+    }
 
-  .green-btn {
-    background-color: #28a745; /* لون أخضر */
-    color: white;
-    border: none;
-    padding: 16px 32px;
-    margin: 8px;
-    cursor: pointer;
-    border-radius: 6px;
-    font-size: 20px;
-  }
+    .blue-btn:hover {
+      background-color: #0056b3;
+    }
 
-  .blue-btn:hover {
-    background-color: #0056b3;
-  }
-
-  .green-btn:hover {
-    background-color: #1e7e34;
-  }
+    .green-btn:hover {
+      background-color: #1e7e34;
+    }
 
     .button-container {
-  display: flex;
-  justify-content: center;
-  gap: 10px;
-  flex-wrap: wrap;
-}
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
 
-.button-container button {
-  width: 150px; /* توحيد العرض */
-  font-size: 16px;
-}
+    .button-container button {
+      width: 150px;
+      font-size: 16px;
+    }
 
     .table-container {
       display: none;
@@ -109,6 +109,13 @@
 
     .delete-button {
       background-color: #f44336;
+      color: white;
+      padding: 12px 24px;
+      border: none;
+      border-radius: 6px;
+      font-size: 18px;
+      cursor: pointer;
+      margin: 8px;
     }
 
     .delete-button:hover {
@@ -129,17 +136,22 @@
 </head>
 <body>
 
-  <h1>اختر الجدول الذي تريده</h1>
+<h1>اختر الجدول الذي تريده</h1>
 
 <div class="button-container">
   <button class="blue-btn" onclick="showTable('mrb')">مربع</button>
   <button class="green-btn" onclick="showTable('reels')">ريلز</button>
 </div>
 
-  <div id="table-container" class="table-container"></div>
+<div id="table-container" class="table-container"></div>
 
 <script>
-  function showTable(type) {
+  // ✅ بيانات Supabase
+  const supabaseUrl = 'https://uemmbigftrrsejzucgxo.supabase.co';
+  const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVlbW1iaWdmdHJyc2VqenVjZ3hvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTg3OTE5NTksImV4cCI6MjA3NDM2Nzk1OX0.ku6ibVn84Pw1a-_2sWTRia3fynuxE7Axi3qXip6oI8k';
+  const supabase = supabase.createClient(supabaseUrl, supabaseKey);
+
+  async function showTable(type) {
     const tableContainer = document.getElementById('table-container');
     tableContainer.style.display = 'block';
     tableContainer.innerHTML = '';
@@ -194,12 +206,13 @@
     table.appendChild(tbody);
     tableContainer.appendChild(table);
 
-    // أزرار حفظ وحذف
+    // أزرار
     const actionDiv = document.createElement('div');
     actionDiv.className = 'action-buttons';
 
     const saveBtn = document.createElement('button');
     saveBtn.textContent = 'حفظ الجدول';
+    saveBtn.className = 'blue-btn';
     saveBtn.onclick = () => saveTableData(type, table);
 
     const deleteBtn = document.createElement('button');
@@ -212,55 +225,85 @@
 
     tableContainer.appendChild(actionDiv);
 
-    // تحميل البيانات المحفوظة
+    // تحميل البيانات من Supabase
     loadSavedData(type, table);
   }
 
-  function saveTableData(type, table) {
+  async function saveTableData(type, table) {
     const rows = Array.from(table.querySelectorAll('tbody tr'));
-    const data = rows.map(row => {
-      return Array.from(row.cells).map(cell => {
-        const input = cell.querySelector('input');
-        if (!input) return '';
-        return input.type === 'checkbox' ? input.checked : input.value;
-      });
-    });
+    const data = [];
 
-    localStorage.setItem(`tableData_${type}`, JSON.stringify(data));
-    alert('تم حفظ الجدول بنجاح!');
-  }
-
-  function loadSavedData(type, table) {
-    const savedData = localStorage.getItem(`tableData_${type}`);
-    if (!savedData) return;
-
-    const data = JSON.parse(savedData);
-    const rows = table.querySelectorAll('tbody tr');
-
-    rows.forEach((row, i) => {
-      const cells = row.querySelectorAll('td');
-      if (!data[i]) return;
-
-      cells.forEach((cell, j) => {
+    rows.forEach((row, rowIndex) => {
+      Array.from(row.cells).forEach((cell, colIndex) => {
         const input = cell.querySelector('input');
         if (!input) return;
 
-        if (input.type === 'checkbox') {
-          input.checked = data[i][j] || false;
-        } else {
-          input.value = data[i][j] || '';
-        }
+        data.push({
+          type,
+          row_index: rowIndex,
+          column_index: colIndex,
+          value: input.type === 'checkbox' ? null : input.value,
+          checked: input.type === 'checkbox' ? input.checked : null
+        });
       });
+    });
+
+    // حذف البيانات القديمة
+    await supabase.from('publishing_schedule').delete().eq('type', type);
+
+    // إدخال البيانات الجديدة
+    const { error } = await supabase.from('publishing_schedule').insert(data);
+    if (error) {
+      console.error(error);
+      alert('حدث خطأ أثناء الحفظ.');
+    } else {
+      alert('تم حفظ الجدول بنجاح!');
+    }
+  }
+
+  async function loadSavedData(type, table) {
+    const { data, error } = await supabase
+      .from('publishing_schedule')
+      .select('*')
+      .eq('type', type);
+
+    if (error) {
+      console.error(error);
+      return;
+    }
+
+    const rows = table.querySelectorAll('tbody tr');
+    data.forEach(entry => {
+      const row = rows[entry.row_index];
+      if (!row) return;
+      const cell = row.cells[entry.column_index];
+      if (!cell) return;
+      const input = cell.querySelector('input');
+      if (!input) return;
+
+      if (input.type === 'checkbox') {
+        input.checked = entry.checked;
+      } else {
+        input.value = entry.value;
+      }
     });
   }
 
-  function deleteTableData(type, table) {
+  async function deleteTableData(type, table) {
     const confirmed = confirm('هل أنت متأكد أنك تريد حذف بيانات هذا الجدول؟');
     if (!confirmed) return;
 
-    localStorage.removeItem(`tableData_${type}`);
+    const { error } = await supabase
+      .from('publishing_schedule')
+      .delete()
+      .eq('type', type);
 
-    // إعادة تعيين القيم في الجدول
+    if (error) {
+      console.error(error);
+      alert('حدث خطأ أثناء الحذف.');
+      return;
+    }
+
     const inputs = table.querySelectorAll('input');
     inputs.forEach(input => {
       if (input.type === 'checkbox') {
@@ -272,7 +315,6 @@
 
     alert('تم حذف البيانات بنجاح!');
   }
-
 </script>
 </body>
 </html>
