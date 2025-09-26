@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>جدول النشر</title>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
     body {
       font-family: 'Arial', sans-serif;
@@ -146,274 +146,265 @@
 <div id="table-container" class="table-container"></div>
 
 <script>
-  // ✅ بيانات Supabase
-const supabaseUrl = 'https://uemmbigftrrsejzucgxo.supabase.co';
-const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVlbW1iaWdmdHJyc2VqenVjZ3hvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTg3OTE5NTksImV4cCI6MjA3NDM2Nzk1OX0.ku6ibVn84Pw1a-_2sWTRia3fynuxE7Axi3qXip6oI8k';
-const supabase = supabase.createClient(supabaseUrl, supabaseKey);
+  // ✅ إنشاء عميل Supabase بشكل صحيح (إصلاح الخطأ الدائري)
+  let supabase;  // إعلان مسبق لتجنب ReferenceError
 
-async function showTable(type) {
-  const tableContainer = document.getElementById('table-container');
-  tableContainer.style.display = 'block';
-  tableContainer.innerHTML = '';
-
-  let headers = ['اليوم', 'التاريخ', 'عنوان المقطع', 'Instagram'];
-
-  if (type === 'mrb') {
-    headers = ['اليوم', 'التاريخ', 'عنوان المقطع', 'Facebook', 'Telegram', 'Instagram', 'X', 'WhatsApp'];
-  } else if (type === 'reels') {
-    headers = ['اليوم', 'التاريخ', 'عنوان المقطع', 'Instagram', 'TikTok'];
+  // الانتظار حتى تحميل المكتبة العالمية
+  function initSupabase() {
+    if (typeof window !== 'undefined' && window.supabase && window.supabase.createClient) {
+      const { createClient } = window.supabase;
+      const supabaseUrl = 'https://uemmbigftrrsejzucgxo.supabase.co';
+      const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVlbW1iaWdmdHJyc2VqenVjZ3hvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTg3OTE5NTksImV4cCI6MjA3NDM2Nzk1OX0.ku6ibVn84Pw1a-_2sWTRia3fynuxE7Axi3qXip6oI8k';
+      supabase = createClient(supabaseUrl, supabaseKey);
+      console.log('✅ Supabase مُنشأ بنجاح!');
+      return true;
+    } else {
+      console.error('❌ مكتبة Supabase لم تُحمّل بعد. انتظر ثانية...');
+      return false;
+    }
   }
 
-  const table = document.createElement('table');
-  const thead = document.createElement('thead');
-  const headRow = document.createElement('tr');
+  // إنشاء العميل عند تحميل الصفحة
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => {
+      if (!initSupabase()) {
+        // إعادة المحاولة بعد 500ms إذا لم تُحمّل
+        setTimeout(initSupabase, 500);
+      }
+    });
+  } else {
+    initSupabase();
+  }
 
-  headers.forEach(header => {
-    const th = document.createElement('th');
-    th.textContent = header;
-    headRow.appendChild(th);
-  });
+  // الانتظار حتى إنشاء supabase قبل استخدام الدوال
+  function waitForSupabase(callback) {
+    if (supabase) {
+      callback();
+    } else {
+      setTimeout(() => waitForSupabase(callback), 100);
+    }
+  }
 
-  thead.appendChild(headRow);
-  table.appendChild(thead);
+  // اختبار الاتصال (يُشغّل بعد إنشاء supabase)
+  async function testSupabaseConnection() {
+    waitForSupabase(async () => {
+      console.log('🔍 بدء اختبار الاتصال بـ Supabase...');
+      try {
+        // اختبار 1: الاتصال الأساسي
+        const { data: pingData, error: pingError } = await supabase
+          .from('pg_catalog')
+          .select('version()')
+          .limit(1);
+        if (pingError) throw new Error('فشل الاتصال الأساسي: ' + pingError.message);
 
-  const tbody = document.createElement('tbody');
-  for (let i = 0; i < 8; i++) {
-    const row = document.createElement('tr');
+        console.log('✅ الاتصال الأساسي ناجح!');
 
-    headers.forEach((header) => {
-      const cell = document.createElement('td');
-      let input;
+        // اختبار 2: هل الجدول موجود؟
+        const { count: tableCount, error: tableError } = await supabase
+          .from('publishing_schedule')
+          .select('*', { count: 'exact', head: true });
 
-      if (header === 'اليوم' || header === 'عنوان المقطع') {
-        input = document.createElement('input');
-        input.type = 'text';
-      } else if (header === 'التاريخ') {
-        input = document.createElement('input');
-        input.type = 'date';
-      } else {
-        input = document.createElement('input');
-        input.type = 'checkbox';
+        if (tableError && tableError.code === '42P01') {
+          console.error('❌ الجدول غير موجود! أنشئه في Supabase (SQL Editor).');
+          alert('❌ الجدول "publishing_schedule" غير موجود!\n\nاذهب إلى Supabase > SQL Editor ونفذ:\nCREATE TABLE IF NOT EXISTS publishing_schedule (id UUID DEFAULT gen_random_uuid() PRIMARY KEY, type TEXT NOT NULL, row_index INTEGER NOT NULL, column_index INTEGER NOT NULL, value TEXT, checked BOOLEAN);');
+          return;
+        } else if (tableError) {
+          throw new Error('خطأ في الوصول إلى الجدول: ' + tableError.message);
+        }
+
+        console.log('✅ الجدول موجود! عدد السجلات:', tableCount || 0);
+
+        // اختبار 3: إدراج تجريبي بسيط
+        const { error: insertTestError } = await supabase
+          .from('publishing_schedule')
+          .insert([{ type: 'test', row_index: 0, column_index: 0, value: 'test_value' }]);
+
+        if (insertTestError) {
+          console.error('❌ خطأ في الإدراج التجريبي:', insertTestError);
+          if (insertTestError.message.includes('permission')) {
+            alert('❌ مشكلة صلاحيات! تعطيل RLS أو أضف Policies في Supabase (Table Editor > publishing_schedule > Policies).');
+          } else {
+            alert('❌ خطأ في الحفظ التجريبي: ' + insertTestError.message + '\n\nتحقق من Console.');
+          }
+          return;
+        }
+
+        console.log('✅ الإدراج ناجح! (حذف السجل التجريبي الآن)');
+        await supabase.from('publishing_schedule').delete().eq('type', 'test');
+        alert('✅ كل شيء يعمل! الاتصال، الجدول، والحفظ جاهزين.\n\nالآن جرب حفظ الجدول الرئيسي.');
+      } catch (err) {
+        console.error('❌ فشل الاختبار الكامل:', err);
+        alert('❌ فشل الاختبار: ' + err.message + '\n\nتحقق من Console للتفاصيل، واتبع الخطوات في Supabase.');
+      }
+    });
+  }
+
+  // الدوال الرئيسية (تستخدم waitForSupabase للانتظار)
+  async function showTable(type) {
+    waitForSupabase(() => {
+      const tableContainer = document.getElementById('table-container');
+      tableContainer.style.display = 'block';
+      tableContainer.innerHTML = '';
+
+      let headers = ['اليوم', 'التاريخ', 'عنوان المقطع', 'Instagram'];
+
+      if (type === 'mrb') {
+        headers = ['اليوم', 'التاريخ', 'عنوان المقطع', 'Facebook', 'Telegram', 'Instagram', 'X', 'WhatsApp'];
+      } else if (type === 'reels') {
+        headers = ['اليوم', 'التاريخ', 'عنوان المقطع', 'Instagram', 'TikTok'];
       }
 
-      cell.appendChild(input);
-      row.appendChild(cell);
-    });
+      const table = document.createElement('table');
+      const thead = document.createElement('thead');
+      const headRow = document.createElement('tr');
 
-    tbody.appendChild(row);
-  }
-
-  table.appendChild(tbody);
-  tableContainer.appendChild(table);
-
-  // أزرار
-  const actionDiv = document.createElement('div');
-  actionDiv.className = 'action-buttons';
-
-  const saveBtn = document.createElement('button');
-  saveBtn.textContent = 'حفظ الجدول';
-  saveBtn.className = 'blue-btn';
-  saveBtn.onclick = () => saveTableData(type, table);
-
-  const deleteBtn = document.createElement('button');
-  deleteBtn.textContent = 'حذف الجدول';
-  deleteBtn.classList.add('delete-button');
-  deleteBtn.onclick = () => deleteTableData(type, table);
-
-  actionDiv.appendChild(saveBtn);
-  actionDiv.appendChild(deleteBtn);
-
-  tableContainer.appendChild(actionDiv);
-
-  // تحميل البيانات من Supabase
-  loadSavedData(type, table);
-}
-
-async function saveTableData(type, table) {
-  try {
-    // الخطوة 1: حذف البيانات القديمة لتجنب التكرار
-    const { error: deleteError } = await supabase
-      .from('publishing_schedule')
-      .delete()
-      .eq('type', type);
-
-    if (deleteError) {
-      console.error('خطأ في الحذف:', deleteError);
-      alert('حدث خطأ أثناء حذف البيانات القديمة.');
-      return;
-    }
-
-    // الخطوة 2: جمع البيانات الجديدة
-    const rows = Array.from(table.querySelectorAll('tbody tr'));
-    const data = [];
-
-    rows.forEach((row, rowIndex) => {
-      Array.from(row.cells).forEach((cell, colIndex) => {
-        const input = cell.querySelector('input');
-        if (!input) return;
-
-        data.push({
-          type,
-          row_index: rowIndex,
-          column_index: colIndex,
-          value: input.type === 'checkbox' ? null : input.value || '',  // تحسين: استخدم '' بدلاً من null للقيم الفارغة
-          checked: input.type === 'checkbox' ? input.checked : null
-        });
+      headers.forEach(header => {
+        const th = document.createElement('th');
+        th.textContent = header;
+        headRow.appendChild(th);
       });
-    });
 
-    // الخطوة 3: إدراج البيانات الجديدة
-    const { error: insertError } = await supabase.from('publishing_schedule').insert(data);
+      thead.appendChild(headRow);
+      table.appendChild(thead);
 
-    if (insertError) {
-      console.error('خطأ في الإدراج:', insertError);
-      alert('حدث خطأ أثناء الحفظ: ' + insertError.message);
-    } else {
-      alert('تم حفظ الجدول بنجاح!');
-      // إعادة تحميل البيانات للتأكيد (اختياري)
+      const tbody = document.createElement('tbody');
+      for (let i = 0; i < 8; i++) {
+        const row = document.createElement('tr');
+
+        headers.forEach((header) => {
+          const cell = document.createElement('td');
+          let input;
+
+          if (header === 'اليوم' || header === 'عنوان المقطع') {
+            input = document.createElement('input');
+            input.type = 'text';
+          } else if (header === 'التاريخ') {
+            input = document.createElement('input');
+            input.type = 'date';
+          } else {
+            input = document.createElement('input');
+            input.type = 'checkbox';
+          }
+
+          cell.appendChild(input);
+          row.appendChild(cell);
+        });
+
+        tbody.appendChild(row);
+      }
+
+      table.appendChild(tbody);
+      tableContainer.appendChild(table);
+
+      // أزرار
+      const actionDiv = document.createElement('div');
+      actionDiv.className = 'action-buttons';
+
+      const saveBtn = document.createElement('button');
+      saveBtn.textContent = 'حفظ الجدول';
+      saveBtn.className = 'blue-btn';
+      saveBtn.onclick = () => saveTableData(type, table);
+
+      const deleteBtn = document.createElement('button');
+      deleteBtn.textContent = 'حذف الجدول';
+      deleteBtn.classList.add('delete-button');
+      deleteBtn.onclick = () => deleteTableData(type, table);
+
+      actionDiv.appendChild(saveBtn);
+      actionDiv.appendChild(deleteBtn);
+
+      tableContainer.appendChild(actionDiv);
+
+      // تحميل البيانات
       loadSavedData(type, table);
-    }
-  } catch (err) {
-    console.error('خطأ عام:', err);
-    alert('حدث خطأ غير متوقع أثناء الحفظ.');
+    });
   }
-}
 
-async function loadSavedData(type, table) {
-  try {
-    const { data, error } = await supabase
-      .from('publishing_schedule')
-      .select('*')
-      .eq('type', type)
-      .order('row_index')  // تحسين: ترتيب حسب row_index لضمان التحميل الصحيح
-      .order('column_index');
+  async function saveTableData(type, table) {
+    waitForSupabase(async () => {
+      try {
+        console.log('💾 بدء حفظ الجدول...');
+        // الخطوة 1: حذف البيانات القديمة
+        const { error: deleteError } = await supabase
+          .from('publishing_schedule')
+          .delete()
+          .eq('type', type);
 
-    if (error) {
-      console.error('خطأ في التحميل:', error);
-      return;
-    }
+        if (deleteError) {
+          console.error('خطأ في الحذف:', deleteError);
+          throw new Error('حدث خطأ أثناء حذف البيانات القديمة: ' + deleteError.message);
+        }
 
-    const rows = table.querySelectorAll('tbody tr');
-    data.forEach(entry => {
-      const row = rows[entry.row_index];
-      if (!row) return;
-      const cell = row.cells[entry.column_index];
-      if (!cell) return;
-      const input = cell.querySelector('input');
-      if (!input) return;
+        // الخطوة 2: جمع البيانات
+        const rows = Array.from(table.querySelectorAll('tbody tr'));
+        const data = [];
 
-      if (input.type === 'checkbox') {
-        input.checked = entry.checked || false;  // تحسين: قيمة افتراضية false
-      } else {
-        input.value = entry.value || '';  // تحسين: قيمة افتراضية فارغة
+        rows.forEach((row, rowIndex) => {
+          Array.from(row.cells).forEach((cell, colIndex) => {
+            const input = cell.querySelector('input');
+            if (!input) return;
+
+            data.push({
+              type,
+              row_index: rowIndex,
+              column_index: colIndex,
+              value: input.type === 'checkbox' ? null : input.value || '',
+              checked: input.type === 'checkbox' ? input.checked : null
+            });
+          });
+        });
+
+        console.log('📊 تم جمع ' + data.length + ' سجل للحفظ.');
+
+        // الخطوة 3: إدراج البيانات
+        const { error: insertError } = await supabase.from('publishing_schedule').insert(data);
+
+        if (insertError) {
+          console.error('خطأ في الإدراج:', insertError);
+          throw new Error('حدث خطأ أثناء الحفظ: ' + insertError.message);
+        } else {
+          console.log('✅ تم الحفظ بنجاح!');
+          alert('تم حفظ الجدول بنجاح!');
+          loadSavedData(type, table);  // إعادة تحميل
+        }
+      } catch (err) {
+        console.error('خطأ عام في الحفظ:', err);
+        alert('حدث خطأ أثناء الحفظ: ' + err.message + '\n\nتحقق من Console للتفاصيل.');
       }
     });
-  } catch (err) {
-    console.error('خطأ في loadSavedData:', err);
   }
-}
 
-async function deleteTableData(type, table) {
-  const confirmed = confirm('هل أنت متأكد أنك تريد حذف بيانات هذا الجدول؟');
-  if (!confirmed) return;
+  async function loadSavedData(type, table) {
+    waitForSupabase(async () => {
+      try {
+        const { data, error } = await supabase
+          .from('publishing_schedule')
+          .select('*')
+          .eq('type', type)
+          .order('row_index')
+          .order('column_index');
 
-  try {
-    const { error } = await supabase
-      .from('publishing_schedule')
-      .delete()
-      .eq('type', type);
+        if (error) {
+          console.error('خطأ في التحميل:', error);
+          return;
+        }
 
-    if (error) {
-      console.error('خطأ في الحذف:', error);
-      alert('حدث خطأ أثناء الحذف: ' + error.message);
-      return;
-    }
+        const rows = table.querySelectorAll('tbody tr');
+        data.forEach(entry => {
+          const row = rows[entry.row_index];
+          if (!row) return;
+          const cell = row.cells[entry.column_index];
+          if (!cell) return;
+          const input = cell.querySelector('input');
+          if (!input) return;
 
-    // مسح الإدخالات في الجدول المحلي
-    const inputs = table.querySelectorAll('input');
-    inputs.forEach(input => {
-      if (input.type === 'checkbox') {
-        input.checked = false;
-      } else {
-        input.value = '';
-      }
-    });
+          if (input.type === 'checkbox') {
+            input.checked = entry.checked || false;
+          } else {
+            input.value = entry.value || '';
+          }
+        });
 
-    alert('تم حذف البيانات بنجاح!');
-  } catch (err) {
-    console.error('خطأ عام في الحذف:', err);
-    alert('حدث خطأ غير متوقع أثناء الحذف.');
-  }
-}
-
-  // اختبار الاتصال (أضفه مؤقتًا)
-async function testSupabase() {
-  try {
-    console.log('اختبار الاتصال بـ Supabase...');
-    
-    // اختبار SELECT بسيط
-    const { data: testData, error: testError } = await supabase
-      .from('publishing_schedule')
-      .select('count')
-      .single();  // يجلب عدد السجلات
-
-    if (testError) {
-      console.error('خطأ في الاتصال:', testError);
-      alert('مشكلة في Supabase: ' + testError.message);
-    } else {
-      console.log('الاتصال ناجح! عدد السجلات الحالي:', testData?.count || 0);
-      alert('الاتصال بـ Supabase يعمل! عدد السجلات: ' + (testData?.count || 0));
-    }
-  } catch (err) {
-    console.error('خطأ عام في الاختبار:', err);
-    alert('خطأ في الاختبار: ' + err.message);
-  }
-}
-
-// شغّل الاختبار عند تحميل الصفحة
-document.addEventListener('DOMContentLoaded', testSupabase);
-
-  // اختبار الاتصال (أضفه مؤقتًا فقط)
-async function testSupabaseConnection() {
-  console.log('🔍 بدء اختبار الاتصال بـ Supabase...');
-  try {
-    // اختبار 1: هل الجدول موجود؟
-    const { data: countData, error: countError } = await supabase
-      .from('publishing_schedule')
-      .select('count', { count: 'exact', head: true });
-
-    if (countError) {
-      console.error('❌ خطأ في الوصول إلى الجدول:', countError.message);
-      alert('❌ مشكلة في الجدول: ' + countError.message + '\n\nأنشئ الجدول في Supabase أولاً (الخطوة 2).');
-      return;
-    }
-
-    console.log('✅ الجدول موجود! عدد السجلات:', countData?.count || 0);
-
-    // اختبار 2: محاولة إدراج بيانات تجريبية بسيطة
-    const { error: insertTestError } = await supabase
-      .from('publishing_schedule')
-      .insert([{ type: 'test', row_index: 0, column_index: 0, value: 'test' }]);
-
-    if (insertTestError) {
-      console.error('❌ خطأ في الإدراج التجريبي:', insertTestError.message);
-      alert('❌ مشكلة في الحفظ: ' + insertTestError.message + '\n\nتحقق من الصلاحيات (الخطوة 3).');
-    } else {
-      console.log('✅ الإدراج يعمل! (تم إضافة سجل تجريبي)');
-      alert('✅ الاتصال والحفظ يعملان! عدد السجلات الآن: ' + (countData?.count + 1 || 1) + '\n\nاحذف السجل التجريبي من Supabase إذا أردت.');
-      
-      // حذف السجل التجريبي تلقائيًا
-      await supabase.from('publishing_schedule').delete().eq('type', 'test');
-    }
-  } catch (err) {
-    console.error('❌ خطأ عام في الاختبار:', err);
-    alert('❌ خطأ غير متوقع في الاختبار: ' + err.message + '\n\nتحقق من Console للتفاصيل.');
-  }
-}
-
-// شغّل الاختبار عند تحميل الصفحة
-document.addEventListener('DOMContentLoaded', testSupabaseConnection);
-
-</script>
-</body>
-</html>
+        console.log('📥 تم تحميل ' + data.length + ' سجل.');
+      } catch (err) {
+        console
