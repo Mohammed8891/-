@@ -252,9 +252,24 @@
           const cell = document.createElement('td');
           let input;
 
-          if (header === 'اليوم' || header === 'عنوان المقطع') {
-            input = document.createElement('input');
-            input.type = 'text';
+      if (header === 'اليوم') {
+        input = document.createElement('input');
+        input.type = 'text';
+      
+      } else if (header === 'عنوان المقطع') {
+        input = document.createElement('input');
+        input.type = 'text';
+        input.classList.add('title-field'); // ← إضافة كلاس لزيادة العرض
+      
+      } else if (header === 'التاريخ') {
+        input = document.createElement('input');
+        input.type = 'date';
+      
+      } else {
+        input = document.createElement('input');
+        input.type = 'checkbox';
+      }
+
           } else if (header === 'التاريخ') {
             input = document.createElement('input');
             input.type = 'date';
