@@ -63,20 +63,19 @@
     /* تفعيل السكروول على محتوى الجدول */
     .table-container {
       display: none;
-      margin-top: 30px;
-      max-height: 500px;      /* ارتفاع ثابت للمنطقة */
-      overflow-y: auto;       /* سكروول رأسي */
-      overflow-x: auto;       /* سكروول أفقي عند الحاجة */
+      margin-top: 10px;
+      height: calc(100vh - 150px); /* يحتل الشاشة كاملة تقريبًا */
+      overflow-y: scroll;         /* سكروول رأسي */
+      overflow-x: auto;
+      padding-bottom: 20px;
     }
 
+
     table {
-      border-collapse: collapse;
       width: 100%;
-      max-width: 1200px;
-      margin: 0 auto;
-      background-color: #00bd23;
-      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      min-width: 1200px;
     }
+
 
     th, td {
       border: 1px solid #dcdcdc;
