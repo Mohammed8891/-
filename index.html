@@ -6,19 +6,22 @@
   <title>جدول النشر</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
-    body {
-  font-family: 'Arial', sans-serif;
-  background-color: #f9f9f9;
-  padding: 0;
-  margin: 0;
-  text-align: center;
-  height: 100vh;
-  overflow: hidden; /* يمنع سكروول الصفحة نفسها */
-}
+    html {
+      height: 100%;
+    }
 
+    body {
+      font-family: 'Arial', sans-serif;
+      background-color: #f9f9f9;
+      padding: 0;
+      margin: 0;
+      text-align: center;
+      min-height: 100vh;
+      overflow-y: auto; /* سكروول طبيعي للصفحة */
+    }
 
     h1 {
-      margin-bottom: 30px;
+      margin: 15px 0 20px;
       color: #333;
     }
 
@@ -53,6 +56,7 @@
       justify-content: center;
       gap: 10px;
       flex-wrap: wrap;
+      margin-bottom: 10px;
     }
 
     .button-container button {
@@ -60,38 +64,41 @@
       font-size: 16px;
     }
 
-    /* تفعيل السكروول على محتوى الجدول */
+    /* الحاوية اللي فيها الجدول */
     .table-container {
       display: none;
       margin-top: 10px;
-      height: calc(100vh - 150px); /* يحتل الشاشة كاملة تقريبًا */
-      overflow-y: scroll;         /* سكروول رأسي */
+      min-height: calc(100vh - 170px); /* تغطي تقريبًا ارتفاع الشاشة */
       overflow-x: auto;
-      padding-bottom: 20px;
+      padding-bottom: 30px;
     }
 
-
+    /* ألوان الجدول الأصلية */
     table {
+      border-collapse: collapse;
       width: 100%;
-      min-width: 1200px;
+      max-width: 1200px;
+      margin: 0 auto;
+      background-color: #00bd23; /* الأخضر كما كان */
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
     }
-
 
     th, td {
       border: 1px solid #dcdcdc;
       padding: 14px 18px;
       text-align: center;
       min-width: 160px;
+      /* بدون خلفية بيضاء هنا */
     }
 
     th {
-      background-color: #f5f5f5;
+      background-color: #f5f5f5; /* الهيدر الرمادي الفاتح */
       color: #333;
       font-weight: bold;
     }
 
     tr:hover {
-      background-color: #fafafa;
+      background-color: #fafafa; /* نفس الـ hover القديم */
     }
 
     input[type="text"], input[type="date"] {
@@ -117,7 +124,7 @@
     }
 
     .action-buttons {
-      margin-top: 20px;
+      margin-top: 15px;
     }
 
     .delete-button {
@@ -152,14 +159,11 @@
       .day-field {
         width: 160px !important;
       }
-      html {
-    height: 100%;
-      }
     }
   </style>
 </head>
 <body>
-  <div id="logo">
+  <div id="logo" style="margin-top: 10px;">
     <img src="لوجو الشيخ.png" height="50px" width="75px" style="margin-right: 15px;">
   </div>
 
@@ -245,7 +249,7 @@
 
         const tbody = document.createElement('tbody');
 
-        /* جعل عدد الصفوف 30 بدل 8 */
+        // 30 صف
         for (let i = 0; i < 30; i++) {
           const row = document.createElement('tr');
           headers.forEach((header) => {
