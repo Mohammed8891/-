@@ -57,10 +57,13 @@
       font-size: 16px;
     }
 
+    /* تفعيل السكروول على محتوى الجدول */
     .table-container {
       display: none;
       margin-top: 30px;
-      overflow-x: auto;
+      max-height: 500px;      /* ارتفاع ثابت للمنطقة */
+      overflow-y: auto;       /* سكروول رأسي */
+      overflow-x: auto;       /* سكروول أفقي عند الحاجة */
     }
 
     table {
@@ -236,7 +239,9 @@
         table.appendChild(thead);
 
         const tbody = document.createElement('tbody');
-        for (let i = 0; i < 8; i++) {
+
+        /* جعل عدد الصفوف 30 بدل 8 */
+        for (let i = 0; i < 30; i++) {
           const row = document.createElement('tr');
           headers.forEach((header) => {
             const cell = document.createElement('td');
